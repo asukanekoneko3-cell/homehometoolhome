@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>業務ツール</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f0ede8;
+    --surface: #faf8f5;
+    --card: #ffffff;
+    --border: #e2ddd7;
+    --border2: #d4cfc8;
+    --sidebar: #2d2926;
+    --sidebar-hover: #3d3733;
+    --sidebar-active: #e8845a;
+    --accent: #e8845a;
+    --accent-light: #fdf0ea;
+    --text: #2d2926;
+    --text-mid: #7a7470;
+    --text-dim: #b0aaa5;
+    --shadow: 0 4px 24px rgba(45,41,38,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Zen Maru Gothic', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+  /* ===== サイドバー ===== */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--sidebar);
+    display: flex; flex-direction: column;
+    height: 100vh; overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo .logo-text {
+    font-size: 14px; font-weight: 700; color: #fff;
+    letter-spacing: 0.04em; line-height: 1.3;
+  }
+  .sidebar-logo .logo-sub {
+    font-size: 10px; color: rgba(255,255,255,0.4);
+    margin-top: 3px; letter-spacing: 0.06em;
+  }
+
+  .sidebar-section { padding: 20px 0 6px; }
+  .sidebar-section-label {
+    font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0 18px 8px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px; cursor: pointer;
+    border-radius: 0; transition: all 0.15s;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--sidebar-hover); }
+  .nav-item.active {
+    background: rgba(232,132,90,0.15);
+    border-left-color: var(--accent);
+  }
+  .nav-item .nav-icon {
+    font-size: 15px; flex-shrink: 0; width: 20px; text-align: center;
+  }
+  .nav-item .nav-label {
+    font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .nav-item.active .nav-label { color: #fff; }
+  .nav-item.external .nav-label::after {
+    content: '↗'; font-size: 10px; margin-left: 4px; opacity: 0.5;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 10px; color: rgba(255,255,255,0.25);
+  }
+
+  /* ===== メインエリア ===== */
+  .main {
+    flex: 1; display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+  }
+
+  /* トップバー */
+  .topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height: 52px;
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .topbar-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    background: var(--accent-light); color: var(--accent);
+    font-weight: 700; border: 1px solid rgba(232,132,90,0.2);
+  }
+  .topbar-ext-btn {
+    margin-left: auto;
+    font-size: 11px; color: var(--text-mid);
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 5px 12px; cursor: pointer;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    text-decoration: none; display: none; align-items: center; gap: 4px;
+    transition: border-color 0.15s;
+  }
+  .topbar-ext-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .topbar-ext-btn.show { display: flex; }
+
+  /* コンテンツ */
+  .content { flex: 1; overflow: hidden; position: relative; }
+
+  /* ホーム */
+  .home-view {
+    position: absolute; inset: 0; overflow-y: auto;
+    padding: 32px 36px;
+  }
+  .home-view.hidden { display: none; }
+
+  .home-greeting {
+    margin-bottom: 32px;
+  }
+  .home-greeting h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .home-greeting p { font-size: 13px; color: var(--text-mid); }
+
+  .home-section-label {
+    font-size: 11px; font-weight: 700; color: var(--text-dim);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .home-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .tool-cards {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 32px;
+  }
+
+  .tool-card {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 16px; padding: 18px;
+    cursor: pointer; transition: all 0.18s;
+    text-decoration: none; display: block;
+  }
+  .tool-card:hover {
+    border-color: var(--accent); box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
+  .tool-card .tc-icon {
+    font-size: 24px; margin-bottom: 10px; display: block;
+  }
+  .tool-card .tc-name {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tool-card .tc-desc {
+    font-size: 11px; color: var(--text-dim); line-height: 1.5;
+  }
+  .tool-card.ext-card .tc-name::after {
+    content: ' ↗'; font-size: 10px; color: var(--text-dim);
+  }
+
+  /* iframe */
+  .iframe-view {
+    position: absolute; inset: 0; display: none;
+  }
+  .iframe-view.show { display: block; }
+  .iframe-view iframe {
+    width: 100%; height: 100%; border: none; display: block;
+  }
+
+  /* iframeエラー表示 */
+  .iframe-fallback {
+    position: absolute; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    background: var(--bg);
+  }
+  .iframe-fallback.show { display: flex; }
+  .iframe-fallback .fi-icon { font-size: 48px; }
+  .iframe-fallback .fi-title { font-size: 16px; font-weight: 700; }
+  .iframe-fallback .fi-desc { font-size: 13px; color: var(--text-mid); text-align: center; line-height: 1.7; }
+  .fi-btn {
+    display: inline-block; padding: 12px 28px; background: var(--accent);
+    color: white; border-radius: 12px; text-decoration: none;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 4px 16px rgba(232,132,90,0.3);
+    transition: background 0.15s;
+  }
+  .fi-btn:hover { background: #dc7248; }
+</style>
+</head>
+<body>
+
+<!-- サイドバー -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">業務ツール</div>
+    <div class="logo-sub">TOOLS DASHBOARD</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">処理ツール</div>
+    <div class="nav-item" onclick="showTool('date')" id="nav-date">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">日付計算</span>
+    </div>
+    <div class="nav-item" onclick="showTool('discount')" id="nav-discount">
+      <span class="nav-icon">🏷️</span>
+      <span class="nav-label">金額計算</span>
+    </div>
+    <a class="nav-item external" href="https://asunaro-wakasa.space/w2itemwww2c" target="_blank" id="nav-scent">
+      <span class="nav-icon">🌸</span>
+      <span class="nav-label">香り変更</span>
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">出荷・不正</div>
+    <div class="nav-item" onclick="showTool('order')" id="nav-order">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label">新規不備チェック</span>
+    </div>
+    <div class="nav-item" onclick="showTool('shipping')" id="nav-shipping">
+      <span class="nav-icon">📦</span>
+      <span class="nav-label">出荷データ整形</span>
+    </div>
+    <div class="nav-item" onclick="showTool('csv')" id="nav-csv">
+      <span class="nav-icon">✂️</span>
+      <span class="nav-label">CSV分割</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    © 業務ツール一覧
+  </div>
+</div>
+
+<!-- メインエリア -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">ホーム</div>
+    <a class="topbar-ext-btn" id="topbarExtBtn" href="#" target="_blank">別タブで開く ↗</a>
+  </div>
+
+  <div class="content">
+
+    <!-- ホーム -->
+    <div class="home-view" id="homeView">
+      <div class="home-greeting">
+        <h2>👋 こんにちは</h2>
+        <p>左のメニューからツールを選ぶか、下のカードをクリックしてください。</p>
+      </div>
+
+      <div class="home-section-label">処理ツール</div>
+      <div class="tool-cards">
+        <div class="tool-card" onclick="showTool('date')">
+          <span class="tc-icon">📅</span>
+          <div class="tc-name">日付計算</div>
+          <div class="tc-desc">何日後・何日前の日付を計算。次回・次々回まで表示。</div>
+        </div>
+        <div class="tool-card" onclick="showTool('discount')">
+          <span class="tc-icon">🏷️</span>
+          <div class="tc-name">金額計算</div>
+          <div class="tc-desc">割引率・割引後金額・消費税（8%/10%）を計算。</div>
+        </div>
+        <a class="tool-card ext-card" href="https://asunaro-wakasa.space/w2itemwww2c" target="_blank">
+          <span class="tc-icon">🌸</span>
+          <div class="tc-name">香り変更</div>
+          <div class="tc-desc">W2の商品香り変更ページ。外部サイトで開きます。</div>
+        </a>
+      </div>
+
+      <div class="home-section-label">出荷・不正</div>
+      <div class="tool-cards">
+        <div class="tool-card" onclick="showTool('order')">
+          <span class="tc-icon">🔍</span>
+          <div class="tc-name">新規不備チェック</div>
+          <div class="tc-desc">W2リピートCSVの住所・入力ミスを6段階で検出。</div>
+        </div>
+        <div class="tool-card" onclick="showTool('shipping')">
+          <span class="tc-icon">📦</span>
+          <div class="tc-name">出荷データ整形</div>
+          <div class="tc-desc">LogiresやCloud Logi用にCSVを整形・変換。</div>
+        </div>
+        <div class="tool-card" onclick="showTool('csv')">
+          <span class="tc-icon">✂️</span>
+          <div class="tc-name">CSV分割</div>
+          <div class="tc-desc">大きなCSVを500行単位に分割してDL。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iframeビュー -->
+    <div class="iframe-view" id="iframeView">
+      <iframe id="toolFrame" src="" title="ツール"></iframe>
+    </div>
+
+    <!-- iframe読み込みエラー時フォールバック（WordPressなど） -->
+    <div class="iframe-fallback" id="iframeFallback">
+      <div class="fi-icon">🌸</div>
+      <div class="fi-title" id="fallbackTitle"></div>
+      <div class="fi-desc">このページはiframeでの表示に対応していないため、<br>別タブで開いてください。</div>
+      <a class="fi-btn" id="fallbackBtn" href="#" target="_blank">別タブで開く</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TOOLS = {
+  date:     { label: '日付計算',       url: 'https://asukanekoneko3-cell.github.io/daydaycycle/',     iframe: true },
+  discount: { label: '金額計算',       url: 'https://asukanekoneko3-cell.github.io/discount-calc/',   iframe: true },
+  order:    { label: '新規不備チェック', url: 'https://asukanekoneko3-cell.github.io/order-checker/',  iframe: true },
+  shipping: { label: '出荷データ整形',  url: 'https://asukanekoneko3-cell.github.io/shipping-fixer/', iframe: true },
+  csv:      { label: 'CSV分割',        url: 'https://asukanekoneko3-cell.github.io/csv-division/',    iframe: true },
+  scent:    { label: '香り変更',       url: 'https://asunaro-wakasa.space/w2itemwww2c',               iframe: false },
+};
+
+let current = null;
+
+function showTool(id) {
+  const tool = TOOLS[id];
+  if (!tool) return;
+
+  // ナビのアクティブ切り替え
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+
+  // ホーム非表示
+  document.getElementById('homeView').classList.add('hidden');
+
+  // トップバー更新
+  document.getElementById('topbarTitle').textContent = tool.label;
+  const extBtn = document.getElementById('topbarExtBtn');
+  extBtn.href = tool.url;
+  extBtn.classList.add('show');
+
+  if (tool.iframe) {
+    document.getElementById('iframeView').classList.add('show');
+    document.getElementById('iframeFallback').classList.remove('show');
+    document.getElementById('toolFrame').src = tool.url;
+  } else {
+    // WordPress等iframe不可 → フォールバック表示
+    document.getElementById('iframeView').classList.remove('show');
+    document.getElementById('iframeFallback').classList.add('show');
+    document.getElementById('fallbackTitle').textContent = tool.label;
+    document.getElementById('fallbackBtn').href = tool.url;
+  }
+
+  current = id;
+}
+
+function showHome() {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('homeView').classList.remove('hidden');
+  document.getElementById('iframeView').classList.remove('show');
+  document.getElementById('iframeFallback').classList.remove('show');
+  document.getElementById('topbarTitle').textContent = 'ホーム';
+  document.getElementById('topbarExtBtn').classList.remove('show');
+  document.getElementById('toolFrame').src = '';
+  current = null;
+}
+
+// ロゴクリックでホームに戻る
+document.querySelector('.sidebar-logo').style.cursor = 'pointer';
+document.querySelector('.sidebar-logo').addEventListener('click', showHome);
+</script>
+</body>
+</html>
